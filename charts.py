@@ -14,6 +14,7 @@ def signed_contracts(dataframe: pd.DataFrame) -> None:
       'Sim': 'Assinado',
       'Não': 'Não assinado',
       None: 'Em aberto',
+      float('nan'): 'Em aberto',
     })
 
     st.plotly_chart(px.pie(
@@ -37,7 +38,9 @@ def signed_contracts(dataframe: pd.DataFrame) -> None:
 def project_values(dataframe : pd.DataFrame) -> None:
   df = dataframe.copy()
   df[utils.COLUMN_MONEY] = df[utils.COLUMN_MONEY].apply(utils.clean_money)
+  st.write(df[utils.COLUMN_MONEY])
 
+  st.write(f'O valor médio dos projetos é de R$ {utils.float_to_money(df[utils.COLUMN_MONEY].mean())}')
   st.plotly_chart(px.histogram(
     df,
     x=utils.COLUMN_MONEY,
