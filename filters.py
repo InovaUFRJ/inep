@@ -2,35 +2,76 @@ import pandas as pd
 import streamlit as st
 from datetime import date
 import utils
+from typing import Literal
 
-initial_date = date.today()
-final_date = date.today()
+process_initial_date : date
+process_final_date : date
+agency_initial_date : date
+signed_initial_date : date
+agency_final_date : date
+signed_final_date : date
+
 center : list[str]
+unique : Literal['first', 'last', 'none', 'all']
 
 def apply(dataframe : pd.DataFrame) -> pd.DataFrame:
   get(dataframe)
 
   df = dataframe.copy()
+
   df[utils.COLUMN_PROCESS_DATE] = pd.to_datetime(df[utils.COLUMN_PROCESS_DATE], errors='coerce')
+  df[utils.COLUMN_ENTERED_AGENCY] = pd.to_datetime(df[utils.COLUMN_ENTERED_AGENCY], errors='coerce')
+  df[utils.COLUMN_EXITED_AGENCY] = pd.to_datetime(df[utils.COLUMN_EXITED_AGENCY], errors='coerce')
+  df[utils.COLUMN_SIGNED_DATE] = pd.to_datetime(df[utils.COLUMN_SIGNED_DATE], errors='coerce')
+
+  match unique:
+    case 'first': df.drop_duplicates(utils.COLUMN_PROCESS, keep='first', inplace=True)
+    case 'last': df.drop_duplicates(utils.COLUMN_PROCESS, keep='last', inplace=True)
+    case 'all': df.drop_duplicates(utils.COLUMN_PROCESS, keep=False, inplace=True)
 
   if center: df = df[df['Centro'].isin(center)]
-  if initial_date < final_date: df = df = df[
-            (df[utils.COLUMN_PROCESS_DATE] >= pd.to_datetime(initial_date)) &
-            (df[utils.COLUMN_PROCESS_DATE] <= pd.to_datetime(final_date))
+
+  if process_initial_date < process_final_date: df = df[
+    (df[utils.COLUMN_PROCESS_DATE] >= pd.to_datetime(process_initial_date)) &
+    (df[utils.COLUMN_PROCESS_DATE] <= pd.to_datetime(process_final_date))
   ]
+  if agency_initial_date < agency_final_date: df = df[
+    (df[utils.COLUMN_ENTERED_AGENCY] >= pd.to_datetime(agency_initial_date)) &
+    (df[utils.COLUMN_EXITED_AGENCY] <= pd.to_datetime(agency_final_date))
+  ]
+  if signed_initial_date < signed_final_date: df = df[
+    (df[utils.COLUMN_SIGNED_DATE] >= pd.to_datetime(signed_initial_date)) &
+    (df[utils.COLUMN_SIGNED_DATE] <= pd.to_datetime(signed_final_date))
+  ]
+    
   return df
 
 def get(dataframe : pd.DataFrame) -> None:
-  global initial_date
-  global final_date
+  global process_initial_date
+  global process_final_date
+  global agency_initial_date
+  global signed_initial_date
+  global agency_final_date
+  global signed_final_date
   global center
+  global unique
 
   left, right = st.sidebar.columns(2)
 
   with left:
-    initial_date = st.date_input('Início Data Processo', value=date(2024,1,1), format='DD/MM/YYYY')
+    process_initial_date = st.date_input('Início Processo', value=date(2024,1,1), format='DD/MM/YYYY')
+    agency_initial_date = st.date_input('Início Tramitação Inova', value = date(2020, 1, 1), format='DD/MM/YYYY')
+    signed_initial_date = st.date_input('Início Assinatura', value = date(2024, 12, 31), format='DD/MM/YYYY')
+
   with right:
-    final_date = st.date_input('Fim Data Processo', value=date(2024,12,31), format='DD/MM/YYYY')
+    process_final_date = st.date_input('Fim Processo', value=date(2024,12,31), format='DD/MM/YYYY')
+    agency_final_date = st.date_input('Fim Tramitação Inova', value = date(2024, 12, 31), format='DD/MM/YYYY')
+    signed_final_date = st.date_input('Fim Assinatura', value = date(2020, 1, 1), format='DD/MM/YYYY')
   
   center = st.sidebar.multiselect('Centros', dataframe['Centro'].dropna().unique().tolist())
+  match st.sidebar.selectbox('Duplicação de Processos', ['Pegar o primeiro', 'Pegar o último', 'Remover todos', 'Manter todos']):
+    case 'Pegar o primeiro': unique = 'first'
+    case 'Pegar o último': unique =  'last'
+    case 'Remover todos': unique = 'all'
+    case 'Manter todos': unique = 'none'
 

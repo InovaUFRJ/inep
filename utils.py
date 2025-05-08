@@ -3,6 +3,7 @@ import pandas as pd
 import re
 from typing import Any
 
+COLUMN_PROCESS = 'Nº do Processo'
 COLUMN_SIGNED = 'Contrato assinado?'
 COLUMN_SIGNED_DATE = 'Data de assinatura do contrato'
 COLUMN_MONEY = 'Valor do Projeto'
