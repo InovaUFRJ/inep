@@ -19,8 +19,12 @@ COLUMN_ORGANIZATION = 'Parceiro / Contratante'
 COLUMN_CNPJ = 'CNPJ'
 
 @st.cache_resource
-def read_dataset() -> pd.DataFrame:
+def read_database() -> pd.DataFrame:
   return pd.read_csv('juridico.csv', sep=';')
+
+@st.cache_resource
+def read_organizations() -> pd.DataFrame:
+  return pd.read_csv('empresas.csv', sep=';').drop_duplicates(subset='cnpj', keep='first')
 
 def clean_money(money : Any) -> float:
   is_dollar = False

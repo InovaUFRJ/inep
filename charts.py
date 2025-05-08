@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import re
 from datetime import datetime
 import utils
 
@@ -39,7 +40,9 @@ def project_values(dataframe : pd.DataFrame) -> None:
   df = dataframe.copy()
   df[utils.COLUMN_MONEY] = df[utils.COLUMN_MONEY].apply(utils.clean_money)
 
+  st.write(f'O valor total dos projetos é de R$ {utils.float_to_money(df[utils.COLUMN_MONEY].sum())}')
   st.write(f'O valor médio dos projetos é de R$ {utils.float_to_money(df[utils.COLUMN_MONEY].mean())}')
+  st.write(f'Quantidade de projetos sem repasse {len(df[df[utils.COLUMN_MONEY]==0])}')
   st.plotly_chart(px.histogram(
     df,
     x=utils.COLUMN_MONEY,
@@ -104,7 +107,7 @@ def life_cicle(dataframe : pd.DataFrame) -> None:
     ).update_layout(bargap=0.1, yaxis_title='Frequência'))
 
 def organization(dataframe : pd.DataFrame) -> None:
-  foreigner, best = st.tabs(['Contratos Internacionais', 'Melhores Empresas'])
+  foreigner, best, cnaes = st.tabs(['Contratos Internacionais', 'Melhores Empresas', 'Melhores CNAEs'])
 
   df = dataframe[dataframe[utils.COLUMN_ORGANIZATION].notna()]
 
@@ -131,5 +134,27 @@ def organization(dataframe : pd.DataFrame) -> None:
       status_counts,
       x= utils.COLUMN_ORGANIZATION,
       y='Quantidade',
-      title='Top 10 Organizações',
+      title='Top 10 Empresas',
+    ))
+
+  with cnaes:
+    cnaes_df = utils.read_organizations().copy()
+
+    if st.checkbox('Remover empresas duplicadas', True): df.drop_duplicates(utils.COLUMN_CNPJ, inplace=True)
+
+    cnaes_df['cnpj'] = cnaes_df['cnpj'].astype(str)
+    cnaes_df['cnae_1'] = cnaes_df['cnae_1'].apply(lambda x: str(x)[:5] if pd.notna(x) else '')
+    cnae_map = dict(zip(cnaes_df['cnpj'], cnaes_df['cnae_1']))
+    df[utils.COLUMN_CNPJ] = df[utils.COLUMN_CNPJ].astype(str).apply(lambda x: re.sub(r'[.,/]', '', x)[:8].lstrip('0') if pd.notna(x) else '')
+    df['CNAE'] = df[utils.COLUMN_CNPJ].map(cnae_map)
+    
+    status_counts = df['CNAE'].dropna().value_counts().reset_index()
+    status_counts.columns = ['CNAE', 'Quantidade']
+    status_counts['CNAE'] = status_counts['CNAE'].astype(str).apply(lambda x: f'CNAE {x}')
+
+    st.plotly_chart(px.bar(
+      status_counts,
+      x= 'CNAE',
+      y='Quantidade',
+      title='Principais CNAEs',
     ))
