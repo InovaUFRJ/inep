@@ -13,6 +13,10 @@ COLUMN_EXIED_ATTORNEY = 'Saída da Procuradoria'
 COLUMN_ENTERED_AGENCY = 'Data de Entrada AGI'
 COLUMN_EXITED_AGENCY = 'Data de Saída AGI'
 COLUMN_CONTRACT_TYPE = 'Tipo de Contrato'
+COLUMN_CENTER = 'Centro'
+COLUMN_UNITY = 'Unidade UFRJ'
+COLUMN_ORGANIZATION = 'Parceiro / Contratante'
+COLUMN_CNPJ = 'CNPJ'
 
 @st.cache_resource
 def read_dataset() -> pd.DataFrame:
@@ -39,3 +43,6 @@ def float_to_money(money : float) -> str:
     result += parts[0][i]
   result += ',' + parts[1][:2]
   return result
+
+def is_cnpj(text : str) -> bool:
+  return bool(re.search('\d\d\.\d\d\d\.\d\d\d\/\d\d\d\d\-\d\d', text))

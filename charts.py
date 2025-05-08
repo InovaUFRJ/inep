@@ -102,3 +102,34 @@ def life_cicle(dataframe : pd.DataFrame) -> None:
       nbins=30,
       title='Dias na InovaUFRJ',
     ).update_layout(bargap=0.1, yaxis_title='Frequência'))
+
+def organization(dataframe : pd.DataFrame) -> None:
+  foreigner, best = st.tabs(['Contratos Internacionais', 'Melhores Empresas'])
+
+  df = dataframe[dataframe[utils.COLUMN_ORGANIZATION].notna()]
+
+  with foreigner:
+    status_counts = dataframe[utils.COLUMN_CNPJ].dropna().apply(
+      lambda x: 'Nacional' if utils.is_cnpj(x) else 'Estrangeiro'
+    ).value_counts().reset_index()
+
+    status_counts.columns = ['Empresa', 'Quantidade']
+
+    st.plotly_chart(px.pie(
+      status_counts,
+      names='Empresa',
+      values='Quantidade',
+      title='Empresa Estrangeira',
+    ))
+  
+  with best:
+    df[utils.COLUMN_ORGANIZATION] = df[utils.COLUMN_ORGANIZATION].str.upper()
+    status_counts = df[utils.COLUMN_ORGANIZATION].dropna().value_counts().reset_index().head(10)
+    status_counts.columns = [utils.COLUMN_ORGANIZATION, 'Quantidade']
+
+    st.plotly_chart(px.bar(
+      status_counts,
+      x= utils.COLUMN_ORGANIZATION,
+      y='Quantidade',
+      title='Top 10 Organizações',
+    ))

@@ -12,3 +12,4 @@ st.write(f'Existem {len(filtered_dataframe)} processos tramitados de acordo com 
 charts.signed_contracts(filtered_dataframe)
 charts.project_values(filtered_dataframe)
 charts.life_cicle(filtered_dataframe)
+charts.organization(filtered_dataframe)
