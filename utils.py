@@ -17,6 +17,7 @@ COLUMN_CENTER = 'Centro'
 COLUMN_UNITY = 'Unidade UFRJ'
 COLUMN_ORGANIZATION = 'Parceiro / Contratante'
 COLUMN_CNPJ = 'CNPJ'
+COLUMN_DURATION = 'Vigência do proj (em meses)'
 
 @st.cache_resource
 def read_database() -> pd.DataFrame:

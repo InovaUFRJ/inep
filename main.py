@@ -5,6 +5,8 @@ import utils, charts, filters
 dataframe = utils.read_database()
 filtered_dataframe = filters.apply(dataframe)
 
+# st.write(dataframe[utils.COLUMN_MONEY])
+
 st.title('Contratos e Parcerias UFRJ')
 st.dataframe(filtered_dataframe)
 

@@ -6,7 +6,7 @@ from datetime import datetime
 import utils
 
 def signed_contracts(dataframe: pd.DataFrame) -> None:
-  signed, types = st.tabs(['Situação dos Contratos', 'Tipos de Contratos'])
+  signed, types, duration = st.tabs(['Situação dos Contratos', 'Tipos de Contratos', 'Vigência'])
 
   with signed:
     status_counts = dataframe[utils.COLUMN_SIGNED].value_counts(dropna=False).reset_index()
@@ -26,7 +26,7 @@ def signed_contracts(dataframe: pd.DataFrame) -> None:
     ))
   
   with types:
-    status_counts = dataframe[utils.COLUMN_CONTRACT_TYPE].value_counts().reset_index()
+    status_counts = dataframe[utils.COLUMN_CONTRACT_TYPE].apply(lambda x: 'Outros' if x == '0' else x).value_counts().reset_index()
     status_counts.columns = ['Tipo', 'Quantidade']
 
     st.plotly_chart(px.pie(
@@ -35,6 +35,18 @@ def signed_contracts(dataframe: pd.DataFrame) -> None:
       values='Quantidade',
       title='Tipos de Contratos',
     ))
+
+  with duration:
+    filtered = pd.to_numeric(dataframe[utils.COLUMN_DURATION], errors='coerce')
+    filtered = filtered[filtered <= 60 ]
+    st.write(f'A vigência média é de {filtered.mean():.2f} meses')
+    st.plotly_chart(px.histogram(
+      filtered,
+      x=utils.COLUMN_DURATION,
+      nbins=30,
+      title='Vigência dos Contratos',
+    ).update_layout(bargap=0.1, yaxis_title='Frequência'))
+
 
 def project_values(dataframe : pd.DataFrame) -> None:
   df = dataframe.copy()
@@ -140,7 +152,7 @@ def organization(dataframe : pd.DataFrame) -> None:
   with cnaes:
     cnaes_df = utils.read_organizations().copy()
 
-    if st.checkbox('Remover empresas duplicadas', True): df.drop_duplicates(utils.COLUMN_CNPJ, inplace=True)
+    if st.checkbox('Remover empresas duplicadas'): df.drop_duplicates(utils.COLUMN_CNPJ, inplace=True)
 
     cnaes_df['cnpj'] = cnaes_df['cnpj'].astype(str)
     cnaes_df['cnae_1'] = cnaes_df['cnae_1'].apply(lambda x: str(x)[:5] if pd.notna(x) else '')
